@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/navigation"
+    app:startDestination="@id/cloudStorageFragment">
+
+    <fragment
+        android:id="@+id/cloudStorageFragment"
+        android:name="com.samurainomichi.cloud_storage_client.cloudstorage.CloudStorageFragment"
+        android:label="cloud_storage_fragment"
+        tools:layout="@layout/cloud_storage_fragment" />
+    <fragment
+        android:id="@+id/temporaryStorageFragment"
+        android:name="com.samurainomichi.cloud_storage_client.temporary.TemporaryStorageFragment"
+        android:label="temporary_storage_fragment"
+        tools:layout="@layout/temporary_storage_fragment" />
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.samurainomichi.cloud_storage_client.settings.SettingsFragment"
+        android:label="SettingsFragment" />
+    <action
+        android:id="@+id/action_global_cloudStorageFragment"
+        app:destination="@id/cloudStorageFragment"
+        app:popUpTo="@id/cloudStorageFragment"
+        app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_temporaryStorageFragment"
+        app:destination="@id/temporaryStorageFragment"
+        app:popUpTo="@id/temporaryStorageFragment"
+        app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_settingsFragment"
+        app:destination="@id/settingsFragment"
+        app:popUpTo="@id/settingsFragment"
+        app:popUpToInclusive="true" />
+</navigation>
