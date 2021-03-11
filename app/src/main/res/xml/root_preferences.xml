@@ -7,6 +7,10 @@
             app:title="@string/server_ip"
             app:defaultValue="192.168.1.148:7000"/>
 
+        <Preference
+            app:key="download_path"
+            app:title="@string/download_path" />
+
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/connection_header">
 

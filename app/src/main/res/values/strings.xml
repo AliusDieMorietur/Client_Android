@@ -9,4 +9,5 @@
     <string name="connection_header">Connection settings</string>
     <string name="dark_theme">Night mode</string>
     <string name="server_ip">Server Ip</string>
+    <string name="download_path">Download path</string>
 </resources>
