@@ -105,6 +105,8 @@ abstract class WSConnection(private val ip: String) {
         id++
         val deferred = CompletableDeferred<List<ByteBuffer>>()
 
+        buffers.clear()
+
         idMap[id] = { message ->
             val res = moshi.adapter(DownloadResult::class.java).fromJson(message)
             res?.let {
