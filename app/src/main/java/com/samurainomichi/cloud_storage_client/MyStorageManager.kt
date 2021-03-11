@@ -1,28 +1,32 @@
 package com.samurainomichi.cloud_storage_client
 
-import android.os.Build
+import android.content.Context
+import android.net.Uri
 import android.os.Environment
-import android.util.Log
-import java.io.File
-import java.io.FileOutputStream
+import android.webkit.MimeTypeMap
+import androidx.documentfile.provider.DocumentFile
+import java.io.OutputStream
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
 
-fun saveFilesToStorage(buffers: List<ByteBuffer>, names: List<String>) {
-    if(!isMediaAvailable())
+fun saveFilesToStorage(buffers: List<ByteBuffer>, names: List<String>, stringUri: String, context: Context) {
+    if (!isMediaAvailable())
         return
 
-    if(true) {
-        val downloadsFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        Log.i("qwerq", downloadsFile.path)
-        var f: File
-        for(i in buffers.indices) {
-            
-            f = File(downloadsFile, names[i])
-            val fc: FileChannel = FileOutputStream(f).channel
-            fc.write(buffers[i])
-            fc.close()
-        }
+    val df = DocumentFile.fromTreeUri(context, Uri.parse(stringUri))
+
+    var namearray: List<String>
+    var mimetype: String
+    var filename: String
+    for (i in buffers.indices) {
+
+        namearray = names[i].split(".")
+        mimetype = MimeTypeMap.getSingleton().getMimeTypeFromExtension(namearray.last())!!
+        filename = namearray.dropLast(1).joinToString("")
+        val f = df?.createFile(mimetype, filename)!!
+
+        val os: OutputStream = context.contentResolver.openOutputStream(f.uri)!!
+        os.write(buffers[i].array())
+        os.close()
     }
 }
 
