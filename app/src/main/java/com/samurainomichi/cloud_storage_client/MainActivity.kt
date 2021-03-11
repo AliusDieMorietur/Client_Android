@@ -3,9 +3,11 @@ package com.samurainomichi.cloud_storage_client
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.navigation.findNavController
+import androidx.preference.PreferenceManager
 import com.google.android.material.bottomnavigation.BottomNavigationMenu
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.samurainomichi.cloud_storage_client.network.WSConnection
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,5 +38,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val serverIp = preferences.getString("server_ip", null) ?: "192.168.1.148:7000"
+        WSConnection.getInstance(serverIp)
     }
 }
