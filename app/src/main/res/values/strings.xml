@@ -10,4 +10,9 @@
     <string name="dark_theme">Night mode</string>
     <string name="server_ip">Server Ip</string>
     <string name="download_path">Download path</string>
+    <string name="upload">Upload</string>
+    <string name="token">token</string>
+    <string name="check_files">Check files</string>
+    <string name="download">Download</string>
+    <string name="choose_files">Choose files</string>
 </resources>
