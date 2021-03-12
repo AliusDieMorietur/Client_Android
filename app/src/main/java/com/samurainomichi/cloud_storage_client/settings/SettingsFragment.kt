@@ -26,8 +26,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val prefPath = findPreference<Preference>("download_path")
         prefPath?.summary = preferences.getString("download_path", null)?.let { Uri.parse(it).path } ?: "Not set"
 
-
         val openDocumentTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if(uri == null)
+                return@registerForActivityResult
+            
             requireContext().contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             val path = uri.toString()
             with(preferences.edit()) {
