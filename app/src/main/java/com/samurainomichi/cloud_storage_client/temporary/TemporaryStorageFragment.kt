@@ -2,12 +2,15 @@ package com.samurainomichi.cloud_storage_client.temporary
 
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.preference.PreferenceManager
 import com.google.android.material.tabs.TabLayout
@@ -26,6 +29,7 @@ class TemporaryStorageFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(TemporaryStorageViewModel::class.java)
         binding = TemporaryStorageFragmentBinding.inflate(layoutInflater)
         val adapter = TemporaryStorageFilesAdapter()
+        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         binding.viewModel = viewModel
         binding.recyclerViewDownloadTmp.adapter = adapter
@@ -43,14 +47,31 @@ class TemporaryStorageFragment : Fragment() {
             viewModel.checkFiles(binding.editTokenTmp.text.toString())
         }
 
+        val openDocumentTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            if(uri == null)
+                return@registerForActivityResult
+
+            requireContext().contentResolver
+                    .takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            val path = uri.toString()
+            with(preferences.edit()) {
+                putString("download_path", path)
+                apply()
+            }
+        }
+
         binding.btnDownloadTmp.setOnClickListener {
-            val encodedPath = PreferenceManager.getDefaultSharedPreferences(requireContext())
-                    .getString("download_path", null) ?: return@setOnClickListener
+            val path = preferences.getString("download_path", null)
+
+            if(path == null) {
+                openDocumentTree.launch(null)
+                return@setOnClickListener
+            }
 
             viewModel.downloadFiles(
                     binding.editTokenTmp.text.toString(),
                     adapter.checkedCards.toList(),
-                    encodedPath,
+                    path,
                     requireContext()
             )
         }
