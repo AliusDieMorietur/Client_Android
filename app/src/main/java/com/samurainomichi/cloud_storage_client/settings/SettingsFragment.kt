@@ -10,6 +10,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.samurainomichi.cloud_storage_client.R
+import com.samurainomichi.cloud_storage_client.login.LoginActivity
 import com.samurainomichi.cloud_storage_client.openDirectory
 import java.io.File
 import java.net.URI
@@ -26,6 +27,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val prefPath = findPreference<Preference>("download_path")
         prefPath?.summary = preferences.getString("download_path", null)?.let { Uri.parse(it).path } ?: "Not set"
 
+        val prefLogout = findPreference<Preference>("logout")
+
         val openDocumentTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             if(uri == null)
                 return@registerForActivityResult
@@ -40,6 +43,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         prefPath?.setOnPreferenceClickListener {
             openDocumentTree.launch(null)
+            true
+        }
+        prefLogout?.setOnPreferenceClickListener {
+            with(preferences.edit()) {
+                putString("auth_token", null)
+                apply()
+            }
+            startActivity(
+                Intent(requireContext(), LoginActivity::class.java)
+            )
+            requireActivity().finish()
             true
         }
 

@@ -19,4 +19,8 @@
             app:title="@string/dark_theme" />
     </PreferenceCategory>
 
+    <Preference
+        app:key="logout"
+        app:title="@string/logout" />
+
 </PreferenceScreen>
