@@ -21,6 +21,8 @@
             android:id="@+id/tab_layout_tmp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
             <com.google.android.material.tabs.TabItem
@@ -42,12 +44,12 @@
             android:id="@+id/layout_download_tmp"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:visibility="@{viewModel.isOnPageDownload ? View.VISIBLE : View.INVISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tab_layout_tmp"
-            android:visibility="@{viewModel.isOnPageDownload ? View.VISIBLE : View.INVISIBLE}"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_token_tmp"
@@ -131,52 +133,75 @@
             android:id="@+id/layout_upload_tmp"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:visibility="@{viewModel.isOnPageDownload ? View.INVISIBLE : View.VISIBLE}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tab_layout_tmp"
-            android:visibility="@{viewModel.isOnPageDownload ? View.INVISIBLE : View.VISIBLE}"
-            tools:visibility="gone">
+            tools:visibility="visible">
+
+            <Button
+                android:id="@+id/btn_copy_tmp"
+                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:visibility="@{viewModel.createdToken == null ? View.INVISIBLE : View.VISIBLE}"
+                app:icon="@drawable/ic_folder_24px"
+                app:layout_constraintBottom_toBottomOf="@+id/textView_tmp_token_upload"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/textView_tmp_token_upload" />
 
             <Button
                 android:id="@+id/btn_tmp_choose"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
                 android:text="@string/choose_files"
-                app:layout_constraintBottom_toTopOf="@+id/textView_upload_tmp"
+                app:layout_constraintBottom_toTopOf="@+id/btn_tmp_upload"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed" />
 
             <Button
                 android:id="@+id/btn_tmp_upload"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="16dp"
                 android:text="@string/upload"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_upload_tmp" />
+                app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
-                android:id="@+id/textView_upload_tmp"
+                android:id="@+id/textView_tmp_token_upload"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:text="TextView"
-                app:layout_constraintBottom_toTopOf="@+id/btn_tmp_upload"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
+                android:text="@{viewModel.createdToken}"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toTopOf="@+id/btn_tmp_choose"
+                app:layout_constraintEnd_toStartOf="@+id/btn_copy_tmp"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/btn_tmp_choose" />
+                tools:text="qwertyuiopasdfghjklzxcvbnmqwerty" />
+
+            <TextView
+                android:id="@+id/textView_fileList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/textView_tmp_token_upload"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

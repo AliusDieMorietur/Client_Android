@@ -1,25 +1,27 @@
 package com.samurainomichi.cloud_storage_client.temporary
 
+import android.content.ClipData
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.google.android.material.tabs.TabLayout
 import com.samurainomichi.cloud_storage_client.databinding.TemporaryStorageFragmentBinding
 
+
 class TemporaryStorageFragment : Fragment() {
     private lateinit var viewModel: TemporaryStorageViewModel
     private lateinit var binding: TemporaryStorageFragmentBinding
-    private var downloadPending: Boolean = false
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -37,8 +39,9 @@ class TemporaryStorageFragment : Fragment() {
         binding.tabLayoutTmp.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
 
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                viewModel.selectTab(tab?.position?: 0)
+                viewModel.selectTab(tab?.position ?: 0)
             }
+
             override fun onTabReselected(tab: TabLayout.Tab?) {}
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
         })
@@ -70,17 +73,40 @@ class TemporaryStorageFragment : Fragment() {
 
             viewModel.downloadFiles(
                     binding.editTokenTmp.text.toString(),
-                    adapter.checkedCards.toList(),
-                    path,
-                    requireContext()
+                    adapter.list.filter { name -> adapter.checkedCards.contains(name) }
             )
+        }
+
+        viewModel.connection.onBufferReceived.observe(viewLifecycleOwner) {
+            val path = preferences.getString("download_path", null)
+
+            path?.let { p ->
+                viewModel.onBuffer(it, p, requireContext())
+            }
         }
 
         binding.btnPasteTmp.setOnClickListener {
             pasteTokenFromClipboard()
         }
 
-        viewModel.fileList.observe(viewLifecycleOwner) {
+        binding.btnTmpChoose.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            intent.type = "*/*"
+
+            @Suppress("DEPRECATION")
+            startActivityForResult(intent, 33)
+        }
+
+        binding.btnTmpUpload.setOnClickListener {
+            viewModel.uploadFiles(requireContext())
+        }
+
+        binding.btnCopyTmp.setOnClickListener {
+            copyTokenToClipboard()
+        }
+
+        viewModel.checkedFilesList.observe(viewLifecycleOwner) {
             adapter.list = it
         }
 
@@ -98,6 +124,33 @@ class TemporaryStorageFragment : Fragment() {
 
             if (text != null && text.length == 32) {
                 binding.editTokenTmp.setText(text)
+            }
+        }
+    }
+
+    private fun copyTokenToClipboard() {
+        val clipboard = getSystemService(requireContext(), ClipboardManager::class.java) as ClipboardManager
+        val token = binding.textViewTmpTokenUpload.text.toString()
+        val clip: ClipData = ClipData.newPlainText("simple text", token)
+        clipboard.setPrimaryClip(clip)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == 33) {
+            if (data != null) {
+                val clipData = data.clipData
+
+                val list = mutableListOf<Uri>()
+                if(clipData != null) {
+                    for (i in 0 until clipData.itemCount) {
+                        val path = clipData.getItemAt(i)
+                        list.add(path.uri)
+                    }
+                    viewModel.setUriList(list)
+                }
+                else if(data.data != null) {
+                    viewModel.setUriList(listOf(data.data!!))
+                }
             }
         }
     }

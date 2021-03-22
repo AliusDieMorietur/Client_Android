@@ -10,6 +10,7 @@ class TemporaryStorageFilesAdapter(): RecyclerView.Adapter<TemporaryStorageFiles
     var list: List<String> = listOf()
         set(value) {
             field = value
+            _checkedCards.clear()
             notifyDataSetChanged()
         }
     private val _checkedCards = mutableSetOf<String>()
