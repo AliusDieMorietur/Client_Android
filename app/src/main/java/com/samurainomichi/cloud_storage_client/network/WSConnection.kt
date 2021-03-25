@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
 import kotlin.random.Random
 
 
-abstract class WSConnection(private val ip: String) {
+abstract class WSConnection(ip: String) {
     companion object {
         private lateinit var INSTANCE: WSConnection
 
@@ -36,7 +36,6 @@ abstract class WSConnection(private val ip: String) {
 
     private val WEB_SOCKET_URL: String = "ws://${ip}"
 
-    private val buffers: MutableList<ByteBuffer> = mutableListOf()
     private val idMap: MutableMap<Int, (message: String) -> Unit> = mutableMapOf()
     private var id = Random.nextInt()
 
@@ -112,7 +111,7 @@ abstract class WSConnection(private val ip: String) {
         }
         client.send(WebSocketMessageFactory.tmpAvailableFiles(id, token, StorageName.tmp))
 
-        return deferred;
+        return deferred
     }
 
     fun tmpDownloadFilesAsync(token: String, fileList: List<String>): Deferred<Boolean> {
@@ -206,6 +205,26 @@ abstract class WSConnection(private val ip: String) {
         return deferred
     }
 
+    fun authLogoutAsync(): Deferred<Boolean> {
+        id++
+        val deferred = CompletableDeferred<Boolean>()
+
+        idMap[id] = { message ->
+            val res = moshi.adapter(GeneralResult::class.java).fromJson(message)
+            res?.let {
+                if (it.error != null) {
+                    deferred.completeExceptionally(Exception("Error: ${it.error.message}"))
+                }
+
+                deferred.complete(true)
+            }
+        }
+
+        val m = WebSocketMessageFactory.authLogout(id)
+        client.send(m)
+        return deferred
+    }
+
     fun sendBuffer(buffer: ByteBuffer) {
         client.send(buffer)
     }
@@ -272,6 +291,13 @@ class WebSocketMessageFactory {
                 "restoreSession",
                 Args(token = token)
             )
+
+        fun authLogout(callId: Int): String =
+            create(
+                callId,
+                "logOut",
+                Args()
+            )
     }
 
 }
@@ -280,7 +306,7 @@ class Session(val id: Int, val userid: Int, val ip: String, val token: String)
 class User(val login: String, val password: String)
 class Error(val message: String?, val code: String?)
 
-class GeneralResult(val callId: Int)
+class GeneralResult(val callId: Int, val error: Error?)
 class StringListResult(val result: List<String>?, val error: Error?)
 class StringResult(val result: String?, val error: Error?)
 class RestoreSessionResult(val result: Session?, val error: Error?)
