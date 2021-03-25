@@ -21,6 +21,7 @@ abstract class WSConnection(ip: String) {
             if(!::INSTANCE.isInitialized)
                 INSTANCE = object : WSConnection(ip) {}
 
+
             return INSTANCE
         }
 
