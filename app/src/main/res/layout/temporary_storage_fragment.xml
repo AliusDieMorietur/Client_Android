@@ -49,7 +49,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tab_layout_tmp"
-            tools:visibility="gone">
+            tools:visibility="visible">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edit_token_tmp"
@@ -122,10 +122,23 @@
                 android:layout_height="wrap_content"
 
                 android:layout_marginEnd="8dp"
-                app:icon="@drawable/ic_folder_24px"
+                app:icon="@drawable/ic_content_paste_black_24dp"
                 app:layout_constraintBottom_toBottomOf="@+id/edit_token_tmp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/edit_token_tmp" />
+
+            <Button
+                android:id="@+id/btn_select_all_tmp"
+                style="@style/Widget.App.Button.OutlinedButton.IconOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="@{viewModel.availableFilesList.empty ? View.INVISIBLE : View.VISIBLE}"
+
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                app:icon="@drawable/ic_select_all_24px"
+                app:layout_constraintStart_toEndOf="@+id/btn_check_tmp"
+                app:layout_constraintTop_toBottomOf="@+id/btn_paste_tmp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -138,7 +151,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tab_layout_tmp"
-            tools:visibility="visible">
+            tools:visibility="gone">
 
             <Button
                 android:id="@+id/btn_copy_tmp"
@@ -146,8 +159,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
+                android:layout_marginBottom="8dp"
                 android:visibility="@{viewModel.createdToken == null ? View.INVISIBLE : View.VISIBLE}"
-                app:icon="@drawable/ic_folder_24px"
+                app:icon="@drawable/ic_content_copy_24px"
                 app:layout_constraintBottom_toBottomOf="@+id/textView_tmp_token_upload"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/textView_tmp_token_upload" />
@@ -177,7 +191,7 @@
 
             <TextView
                 android:id="@+id/textView_tmp_token_upload"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
@@ -190,18 +204,32 @@
                 app:layout_constraintStart_toStartOf="parent"
                 tools:text="qwertyuiopasdfghjklzxcvbnmqwerty" />
 
-            <TextView
-                android:id="@+id/textView_fileList"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+
+            <ScrollView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginBottom="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/textView_tmp_token_upload"
+                android:scrollbars="none"
+                app:layout_constraintBottom_toTopOf="@+id/btn_copy_tmp"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0">
+
+                <TextView
+                    android:id="@+id/textView_tmp_upload_fileList"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:text="@{viewModel.stringFilesToUpload}"
+                    android:textSize="24sp"
+                    tools:text="Files go here" />
+            </ScrollView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

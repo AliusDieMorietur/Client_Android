@@ -3,13 +3,13 @@ package com.samurainomichi.cloud_storage_client.temporary
 import android.content.ClipData
 import android.content.ClipDescription.MIMETYPE_TEXT_PLAIN
 import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
@@ -47,7 +47,8 @@ class TemporaryStorageFragment : Fragment() {
         })
 
         binding.btnCheckTmp.setOnClickListener {
-            viewModel.checkFiles(binding.editTokenTmp.text.toString())
+            viewModel.checkAvailableFiles(binding.editTokenTmp.text.toString())
+            binding.editTokenTmp.clearFocus()
         }
 
         val openDocumentTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -72,8 +73,8 @@ class TemporaryStorageFragment : Fragment() {
             }
 
             viewModel.downloadFiles(
-                    binding.editTokenTmp.text.toString(),
-                    adapter.list.filter { name -> adapter.checkedCards.contains(name) }
+                binding.editTokenTmp.text.toString(),
+                adapter.list.filter { name -> adapter.checkedCards.contains(name) }
             )
         }
 
@@ -87,6 +88,10 @@ class TemporaryStorageFragment : Fragment() {
 
         binding.btnPasteTmp.setOnClickListener {
             pasteTokenFromClipboard()
+        }
+
+        binding.btnSelectAllTmp.setOnClickListener {
+            adapter.checkAll()
         }
 
         binding.btnTmpChoose.setOnClickListener {
@@ -106,8 +111,22 @@ class TemporaryStorageFragment : Fragment() {
             copyTokenToClipboard()
         }
 
-        viewModel.checkedFilesList.observe(viewLifecycleOwner) {
+        viewModel.availableFilesList.observe(viewLifecycleOwner) {
             adapter.list = it
+        }
+
+        viewModel.filesDownloadResult.observe(viewLifecycleOwner) {
+            if(it.isSuccess)
+                Toast.makeText(requireContext(), "${it.getOrNull()} files downloaded", Toast.LENGTH_SHORT).show()
+            else
+                Toast.makeText(requireContext(), "Download failed", Toast.LENGTH_SHORT).show()
+        }
+
+        viewModel.filesUploadResult.observe(viewLifecycleOwner) {
+            if(it.isSuccess)
+                Toast.makeText(requireContext(), "${it.getOrNull()} files uploaded", Toast.LENGTH_SHORT).show()
+            else
+                Toast.makeText(requireContext(), "Upload failed", Toast.LENGTH_SHORT).show()
         }
 
         pasteTokenFromClipboard()
@@ -146,10 +165,10 @@ class TemporaryStorageFragment : Fragment() {
                         val path = clipData.getItemAt(i)
                         list.add(path.uri)
                     }
-                    viewModel.setUriList(list)
+                    viewModel.setUriList(list, requireContext())
                 }
                 else if(data.data != null) {
-                    viewModel.setUriList(listOf(data.data!!))
+                    viewModel.setUriList(listOf(data.data!!), requireContext())
                 }
             }
         }

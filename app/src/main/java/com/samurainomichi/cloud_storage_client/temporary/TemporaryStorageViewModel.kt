@@ -3,10 +3,7 @@ package com.samurainomichi.cloud_storage_client.temporary
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.samurainomichi.cloud_storage_client.network.WSConnection
 import com.samurainomichi.cloud_storage_client.readFileFromStorage
 import com.samurainomichi.cloud_storage_client.readFileNames
@@ -18,7 +15,15 @@ import java.nio.ByteBuffer
 class TemporaryStorageViewModel : ViewModel() {
     val connection: WSConnection = WSConnection.getInstance("")
 
-    val checkedFilesList: MutableLiveData<List<String>> = MutableLiveData(listOf())
+    val availableFilesList: MutableLiveData<List<String>> = MutableLiveData(listOf())
+
+    private val _filesDownloadResult: MutableLiveData<Result<Int>> = MutableLiveData()
+    val filesDownloadResult: LiveData<Result<Int>>
+        get() = _filesDownloadResult
+
+    private val _filesUploadResult: MutableLiveData<Result<Int>> = MutableLiveData()
+    val filesUploadResult: LiveData<Result<Int>>
+        get() = _filesUploadResult
 
     private val _createdToken = MutableLiveData<String>()
     val createdToken: LiveData<String>
@@ -28,7 +33,12 @@ class TemporaryStorageViewModel : ViewModel() {
     val isOnPageDownload: LiveData<Boolean>
         get() = _isOnPageDownload
 
-    var filesUriToUpload = mutableListOf<Uri>()
+    private val filesToUpload = MutableLiveData<List<String>>()
+    val stringFilesToUpload: LiveData<String> = Transformations.map(filesToUpload) {
+        it.mapIndexed {i, item -> "${i+1}. $item"}.joinToString("\n", "Chosen files:\n")
+    }
+
+    private var filesUriToUpload = mutableListOf<Uri>()
 
     private val filesToDownload = mutableListOf<String>()
     private var downloadIterator = filesToDownload.iterator()
@@ -41,11 +51,11 @@ class TemporaryStorageViewModel : ViewModel() {
         }
     }
 
-    fun checkFiles(token: String) {
+    fun checkAvailableFiles(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val list: List<String> = connection.tmpAvailableFilesAsync(token).await()
-                checkedFilesList.postValue(list)
+                availableFilesList.postValue(list)
             }
             catch (e: Exception) {
                 Log.i("qwerq", e.toString())
@@ -63,13 +73,19 @@ class TemporaryStorageViewModel : ViewModel() {
             }
             catch (e: Exception) {
                 Log.e("qwerq", e.message.toString())
+                _filesDownloadResult.postValue(Result.failure(e))
             }
         }
     }
 
-    fun setUriList(list: List<Uri>) {
+    fun setUriList(list: List<Uri>, context: Context) {
         filesUriToUpload.clear()
         filesUriToUpload.addAll(list)
+        viewModelScope.launch(Dispatchers.IO) {
+            val names = readFileNames(filesUriToUpload, context)
+            filesToUpload.postValue(names)
+        }
+
     }
 
     fun uploadFiles(context: Context) {
@@ -86,10 +102,12 @@ class TemporaryStorageViewModel : ViewModel() {
                     connection.sendBuffer(file)
                 }
                 _createdToken.postValue(token)
+                _filesUploadResult.postValue(Result.success(filesUriToUpload.size))
 
             }
             catch (e: Exception) {
                 Log.e("qwerq", e.message.toString())
+                _filesUploadResult.postValue(Result.failure(e))
             }
         }
     }
@@ -104,12 +122,14 @@ class TemporaryStorageViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 saveFileToStorage(buffer, name, directoryUri, context)
+                if(!downloadIterator.hasNext()) {
+                    _filesDownloadResult.postValue(Result.success(filesToDownload.size))
+                }
             }
             catch (e: Exception) {
                 Log.e("qwerq", e.message.toString())
+                _filesDownloadResult.postValue(Result.failure(e))
             }
         }
     }
-
-
 }

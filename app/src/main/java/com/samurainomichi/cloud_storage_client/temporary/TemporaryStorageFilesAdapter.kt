@@ -42,6 +42,14 @@ class TemporaryStorageFilesAdapter(): RecyclerView.Adapter<TemporaryStorageFiles
     }
 
     override fun getItemCount(): Int = list.size
+
+    fun checkAll() {
+        if(checkedCards.containsAll(list)) {
+            _checkedCards.clear()
+        }
+        else _checkedCards.addAll(list)
+        notifyDataSetChanged()
+    }
 }
 
 class TemporaryStorageFilesViewHolder(private val binding: ItemTempFileBinding): RecyclerView.ViewHolder(binding.root) {
