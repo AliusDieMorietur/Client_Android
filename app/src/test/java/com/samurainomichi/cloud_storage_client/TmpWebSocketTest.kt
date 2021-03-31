@@ -4,8 +4,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.samurainomichi.cloud_storage_client.network.WSConnection
 import kotlinx.coroutines.*
 import org.junit.*
-import org.junit.Assert.assertEquals
+import org.junit.Assert.*
 import org.junit.runners.MethodSorters
+import java.lang.Exception
 import java.nio.ByteBuffer
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -67,10 +68,54 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun tl_logOut() {
-        runBlocking {
-            connection.authLogoutAsync().await()
+    fun t5_availableFilesWrongToken() = runBlocking {
+        connection.connectBlocking()
+        try {
+            val list = connection.tmpAvailableFilesAsync("12345678901234567890123456789012").await()
+            fail("Exception 'No such token' expected")
         }
+        catch (e: Exception) {
+            assertEquals("No such token", e.message)
+        }
+    }
+
+    @Test
+    fun t6_downloadWrongToken() = runBlocking {
+        try {
+            connection.tmpDownloadFilesAsync("Definitely wrong token.", listOf()).await()
+            fail("Exception 'No such token' expected")
+        }
+        catch (e: Exception) {
+            assertEquals("Invalid token", e.message)
+        }
+    }
+
+    @Test
+    fun tl0_logOut() = runBlocking {
+        connection.authLogoutAsync().await()
         println("Logged out")
+    }
+
+    @Test
+    fun tl1_authWrongUsername() = runBlocking {
+        try {
+            val authToken = connection.authLoginAsync("NoWayItExists", "123456").await()
+            fail("Exception 'No such user' expected")
+        }
+        catch (e: Exception) {
+            assertEquals("User with login <NoWayItExists> doesn't exist", e.message)
+        }
+
+    }
+
+    @Test
+    fun tl2_authWrongPassword() = runBlocking {
+        try {
+            val authToken = connection.authLoginAsync("admin", "123456").await()
+            fail("Exception 'Wrong password' expected")
+        }
+        catch (e: Exception) {
+            assertEquals("Username and/or password is incorrect", e.message)
+        }
     }
 }

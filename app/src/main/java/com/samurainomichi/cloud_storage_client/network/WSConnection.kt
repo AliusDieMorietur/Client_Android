@@ -2,7 +2,10 @@ package com.samurainomichi.cloud_storage_client.network
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -10,7 +13,6 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
 import java.nio.ByteBuffer
-import kotlin.random.Random
 
 
 abstract class WSConnection(ip: String) {
@@ -35,13 +37,13 @@ abstract class WSConnection(ip: String) {
     val onConnectionClosed = MutableLiveData(false)
     val onBufferReceived: MutableLiveData<ByteBuffer> = MutableLiveData()
 
-    private val WEB_SOCKET_URL: String = "ws://${ip}"
+    private val webSocketUrl: String = "ws://${ip}"
 
     private val idMap: MutableMap<Int, (message: String) -> Unit> = mutableMapOf()
-    private var id = Random.nextInt()
+    private var id = 0
 
     private val client: WebSocketClient =
-            object : WebSocketClient(URI(WEB_SOCKET_URL)) {
+            object : WebSocketClient(URI(webSocketUrl)) {
                 override fun onOpen(handshakedata: ServerHandshake?) {
                     onConnectionOpen.postValue(true)
                     Log.i("WS_CONNECTION", "Connection opened")
@@ -54,7 +56,7 @@ abstract class WSConnection(ip: String) {
                     if (message == null)
                         return
 
-                    moshi.adapter(GeneralResult::class.java).fromJson(message)?.callId?.let {
+                    moshi.adapter(CallIdResult::class.java).fromJson(message)?.callId?.let {
                         idMap[it]?.invoke(message)
                         idMap.remove(it)
                     }
@@ -90,224 +92,115 @@ abstract class WSConnection(ip: String) {
         client.reconnect()
     }
 
-    fun tmpAvailableFilesAsync(token: String): Deferred<List<String>> {
-        id++
-        val deferred = CompletableDeferred<List<String>>()
+    fun tmpAvailableFilesAsync(token: String): Deferred<List<String>> =
+        sendMessageAndGetResultAsync(
+            "availableFiles",
+            Args(token = token, storage = StorageName.tmp)
+        )
 
-        idMap[id] = { message ->
-            val res = moshi.adapter(StringListResult::class.java).fromJson(message)
+    fun tmpDownloadFilesAsync(token: String, fileList: List<String>): Deferred<Boolean> =
+        sendMessageAndGetResultAsync(
+            "download",
+            Args(token = token, storage = StorageName.tmp, fileList = fileList),
+            ignoreResult = true
+        )
+
+    fun tmpUploadFilesGetTokenAsync(fileNames: List<String>): Deferred<String> =
+        sendMessageAndGetResultAsync(
+            "upload",
+            Args(fileList = fileNames, storage = StorageName.tmp)
+        )
+    fun authLoginAsync(username: String, password: String): Deferred<String> =
+        sendMessageAndGetResultAsync(
+            "authUser",
+            Args(user = User(username, password))
+        )
+
+    fun authRestoreSessionAsync(token: String): Deferred<String> =
+        sendMessageAndGetResultAsync(
+            "restoreSession",
+            Args(token = token)
+        )
+
+    fun authLogoutAsync(): Deferred<Boolean> =
+        sendMessageAndGetResultAsync(
+            "logOut",
+            Args(),
+            ignoreResult = true
+        )
+
+    fun pmtAvailableFilesAsync(): Deferred<List<Structure>> =
+        sendMessageAndGetResultAsync(
+            "availableFiles",
+            Args(storage = StorageName.pmt)
+        )
+    private inline fun <reified T> sendMessageAndGetResultAsync(action: String, args: Args, ignoreResult: Boolean = false): Deferred<T> {
+        val deferred = CompletableDeferred<T>()
+
+        val type = Types.newParameterizedType(MessageResult::class.java, T::class.java)
+        val adapter: JsonAdapter<MessageResult<T>> = moshi.adapter(type)
+
+        id++
+
+        idMap[id] = { msg ->
+            val res = adapter.fromJson(msg)
             res?.let {
                 when {
                     it.error != null -> {
-                        deferred.completeExceptionally(Exception("${it.error.code}"))
+                        deferred.completeExceptionally(Exception(it.error.message))
                     }
-                    it.result != null -> {
-                        deferred.complete(it.result)
-                    }
-                    else -> {
-                        deferred.completeExceptionally(Exception("Exception: List is null"))
-                    }
-                }
-            }
-        }
-        client.send(WebSocketMessageFactory.tmpAvailableFiles(id, token, StorageName.tmp))
-
-        return deferred
-    }
-
-    fun tmpDownloadFilesAsync(token: String, fileList: List<String>): Deferred<Boolean> {
-        id++
-        val deferred = CompletableDeferred<Boolean>()
-
-        idMap[id] = { message ->
-            deferred.complete(true)
-        }
-
-        client.send(WebSocketMessageFactory.tmpDownload(id, token, fileList))
-
-        return deferred
-    }
-
-    fun tmpUploadFilesGetTokenAsync(fileNames: List<String>): Deferred<String> {
-        id++
-        val deferred = CompletableDeferred<String>()
-
-        idMap[id] = { message ->
-            val res = moshi.adapter(StringResult::class.java).fromJson(message)
-            res?.let {
-                when {
-                    it.error != null -> {
-                        deferred.completeExceptionally(Exception("Error: ${it.error}"))
-                    }
-                    it.result != null -> {
-                        deferred.complete(it.result)
+                    it.result != null || ignoreResult -> {
+                        deferred.complete(it.result?: true as T)
                     }
                     else -> {
-                        deferred.completeExceptionally(Exception("Exception: unexpected error (tmpUploadFiles)"))
+                        deferred.completeExceptionally(Exception("Unexpected error."))
                     }
                 }
             }
         }
 
-        val m = WebSocketMessageFactory.tmpUpload(id, fileNames)
-        client.send(m)
-        return deferred
-    }
-
-    fun authLoginAsync(username: String, password: String): Deferred<String> {
-        id++
-        val deferred = CompletableDeferred<String>()
-
-        idMap[id] = { message ->
-            val res = moshi.adapter(StringResult::class.java).fromJson(message)
-            res?.let {
-                when {
-                    it.error != null -> {
-                        deferred.completeExceptionally(Exception("Error: ${it.error}"))
-                    }
-                    it.result != null -> {
-                        deferred.complete(it.result)
-                    }
-                    else -> {
-                        deferred.completeExceptionally(Exception("Exception: unexpected error (authLogin)"))
-                    }
-                }
-            }
-        }
-
-        val m = WebSocketMessageFactory.authUser(id, User(username, password))
-        client.send(m)
-        return deferred
-    }
-
-    fun authRestoreSessionAsync(token: String): Deferred<String> {
-        id++
-        val deferred = CompletableDeferred<String>()
-
-        idMap[id] = { message ->
-            val res = moshi.adapter(StringResult::class.java).fromJson(message)
-            res?.let {
-                when {
-                    it.error != null -> {
-                        deferred.completeExceptionally(Exception("Error: ${it.error}"))
-                    }
-                    it.result != null -> {
-                        deferred.complete(it.result)
-                    }
-                    else -> {
-                        deferred.completeExceptionally(Exception("Exception: unexpected error (authRestoreSession)"))
-                    }
-                }
-            }
-        }
-
-        val m = WebSocketMessageFactory.authRestoreSession(id, token)
-        client.send(m)
-        return deferred
-    }
-
-    fun authLogoutAsync(): Deferred<Boolean> {
-        id++
-        val deferred = CompletableDeferred<Boolean>()
-
-        idMap[id] = { message ->
-            val res = moshi.adapter(GeneralResult::class.java).fromJson(message)
-            res?.let {
-                if (it.error != null) {
-                    deferred.completeExceptionally(Exception("Error: ${it.error.message}"))
-                }
-
-                deferred.complete(true)
-            }
-        }
-
-        val m = WebSocketMessageFactory.authLogout(id)
-        client.send(m)
+        client.send(createMessage(id, action, args))
         return deferred
     }
 
     fun sendBuffer(buffer: ByteBuffer) {
         client.send(buffer)
     }
-}
 
-class Args(
-        val storage: String? = null,
-        val token: String? = null,
-        val fileList: List<String>? = null,
-        val currentPath: String? = null,
-        val action: String? = null,
-        val changes: List<List<String>>? = null,
-        val user: User? = null,
-
-) {
-    override fun toString(): String = WSConnection.moshi.adapter(Args::class.java).toJson(this)
+    private fun createMessage(callId: Int, msg: String, args: Args): String =
+        "{\n" +
+            "    \"callId\": \"$callId\",\n" +
+            "    \"msg\": \"$msg\",\n" +
+            "    \"args\": $args\n" +
+            "}"
 }
 
 object StorageName {
-    val tmp = "tmp"
-    val pmt = "pmt"
+    const val tmp = "tmp"
+    const val pmt = "pmt"
 }
 
-class WebSocketMessageFactory {
-    companion object {
-        private fun create(callId: Int, msg: String, args: Args): String =
-                "{\n" +
-                        "    \"callId\": \"$callId\",\n" +
-                        "    \"msg\": \"$msg\",\n" +
-                        "    \"args\": $args\n" +
-                        "}"
+class Structure(
+    val name: String,
+    @Json(name = "childs") val children: List<Structure>?,
+    val capacity: Int
+)
 
-        fun tmpAvailableFiles(callId: Int, token: String, storageName: String): String =
-            create(
-                callId,
-                "availableFiles",
-                Args(token = token, storage = storageName)
-            )
+class Args(
+    val storage: String? = null,
+    val token: String? = null,
+    val fileList: List<String>? = null,
+    val currentPath: String? = null,
+    val action: String? = null,
+    val changes: List<List<String>>? = null,
+    val user: User? = null,
 
-        fun tmpDownload(callId: Int, token: String, fileList: List<String>?): String =
-            create(
-                callId,
-                "download",
-                Args(token = token, fileList = fileList, storage = StorageName.tmp)
-            )
-
-        fun tmpUpload(callId: Int, fileList: List<String>?): String =
-            create(
-                callId,
-                "upload",
-                Args(fileList = fileList, storage = StorageName.tmp)
-            )
-
-        fun authUser(callId: Int, user: User): String =
-            create(
-                callId,
-                "authUser",
-                Args(user = user)
-            )
-
-        fun authRestoreSession(callId: Int, token: String): String =
-            create(
-                callId,
-                "restoreSession",
-                Args(token = token)
-            )
-
-        fun authLogout(callId: Int): String =
-            create(
-                callId,
-                "logOut",
-                Args()
-            )
-    }
-
+    ) {
+    override fun toString(): String = WSConnection.moshi.adapter(Args::class.java).toJson(this)
 }
 
-class Session(val id: Int, val userid: Int, val ip: String, val token: String)
 class User(val login: String, val password: String)
 class Error(val message: String?, val code: String?)
 
-class GeneralResult(val callId: Int, val error: Error?)
-class StringListResult(val result: List<String>?, val error: Error?)
-class StringResult(val result: String?, val error: Error?)
-class RestoreSessionResult(val result: Session?, val error: Error?)
+class CallIdResult(val callId: Int)
+class MessageResult<T>(val result: T?, val error: Error?)
