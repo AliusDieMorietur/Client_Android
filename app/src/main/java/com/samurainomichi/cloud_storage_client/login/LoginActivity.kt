@@ -9,22 +9,18 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 import androidx.preference.PreferenceManager
 import com.samurainomichi.cloud_storage_client.MainActivity
 
 import com.samurainomichi.cloud_storage_client.R
-import com.samurainomichi.cloud_storage_client.network.WSConnection
-import kotlinx.coroutines.runBlocking
-import java.lang.Exception
+import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.WebSocketDataSource
 
 class LoginActivity : AppCompatActivity() {
 
@@ -36,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val serverIp = preferences.getString("server_ip", null) ?: "192.168.1.148:7000"
-        val connection = WSConnection.getInstance(serverIp)
+        val connection = Connection.getInstance(WebSocketDataSource(serverIp))
         connection.connect()
 
         val username = findViewById<EditText>(R.id.username)
@@ -110,13 +106,10 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        connection.onConnectionOpen.observe(this) { isOpen ->
-            if(isOpen) {
-                connection.onConnectionOpen.value = false
-                val authToken = preferences.getString("auth_token", null)
-                authToken?.let {
-                    loginViewModel.loginWithToken(it)
-                }
+        connection.onConnectionOpened.observe {
+            val authToken = preferences.getString("auth_token", null)
+            authToken?.let {
+                loginViewModel.loginWithToken(it)
             }
         }
     }

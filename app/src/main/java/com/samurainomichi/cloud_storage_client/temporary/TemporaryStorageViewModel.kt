@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
-import com.samurainomichi.cloud_storage_client.network.WSConnection
+import com.samurainomichi.cloud_storage_client.network.Connection
 import com.samurainomichi.cloud_storage_client.readFileFromStorage
 import com.samurainomichi.cloud_storage_client.readFileNames
 import com.samurainomichi.cloud_storage_client.saveFileToStorage
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 
 class TemporaryStorageViewModel : ViewModel() {
-    val connection: WSConnection = WSConnection.getInstance("")
+    val connection = Connection.getInstance()
 
     val availableFilesList: MutableLiveData<List<String>> = MutableLiveData(listOf())
 
@@ -54,7 +54,7 @@ class TemporaryStorageViewModel : ViewModel() {
     fun checkAvailableFiles(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val list: List<String> = connection.tmpAvailableFilesAsync(token).await()
+                val list: List<String> = connection.tmpAvailableFiles(token)
                 availableFilesList.postValue(list)
             }
             catch (e: Exception) {
@@ -69,7 +69,7 @@ class TemporaryStorageViewModel : ViewModel() {
                 filesToDownload.clear()
                 filesToDownload.addAll(list)
                 downloadIterator = filesToDownload.iterator()
-                connection.tmpDownloadFilesAsync(token, list).await()
+                connection.tmpDownloadFiles(token, list)
             }
             catch (e: Exception) {
                 Log.e("qwerq", e.message.toString())
@@ -95,7 +95,7 @@ class TemporaryStorageViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val names = readFileNames(filesUriToUpload, context)
-                val token = connection.tmpUploadFilesGetTokenAsync(names).await()
+                val token = connection.tmpUploadFilesGetToken(names)
 
                 for(uri in filesUriToUpload) {
                     val file = readFileFromStorage(uri, context)

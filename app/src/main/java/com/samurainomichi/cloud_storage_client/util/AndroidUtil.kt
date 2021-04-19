@@ -1,11 +1,9 @@
-package com.samurainomichi.cloud_storage_client
+package com.samurainomichi.cloud_storage_client.util
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.startActivity
 
 fun checkPermission(context: Context, permission: String): Boolean =
         (ContextCompat.checkSelfPermission(

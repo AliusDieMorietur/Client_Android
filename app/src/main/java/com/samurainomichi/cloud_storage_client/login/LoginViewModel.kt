@@ -6,12 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.samurainomichi.cloud_storage_client.R
-import com.samurainomichi.cloud_storage_client.network.WSConnection
+import com.samurainomichi.cloud_storage_client.network.Connection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val connection = WSConnection.getInstance()
+    private val connection = Connection.getInstance()
 
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm
@@ -22,7 +22,7 @@ class LoginViewModel : ViewModel() {
     fun login(username: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val authToken = connection.authLoginAsync(username, password).await()
+                val authToken = connection.authLogin(username, password)
                 _loginResult.postValue(LoginResult(success = authToken))
             }
 
@@ -35,8 +35,8 @@ class LoginViewModel : ViewModel() {
     fun loginWithToken(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val token = connection.authRestoreSessionAsync(token).await()
-                _loginResult.postValue(LoginResult(success = token))
+                val t = connection.authRestoreSession(token)
+                _loginResult.postValue(LoginResult(success = t))
             }
             catch (e: Exception) {
                 _loginResult.postValue(LoginResult(error = R.string.session_not_restored))

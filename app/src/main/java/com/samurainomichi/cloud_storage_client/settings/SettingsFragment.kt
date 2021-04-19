@@ -1,6 +1,5 @@
 package com.samurainomichi.cloud_storage_client.settings
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,12 +10,8 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.samurainomichi.cloud_storage_client.R
 import com.samurainomichi.cloud_storage_client.login.LoginActivity
-import com.samurainomichi.cloud_storage_client.network.WSConnection
-import com.samurainomichi.cloud_storage_client.openDirectory
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import java.io.File
-import java.net.URI
+import com.samurainomichi.cloud_storage_client.network.Connection
+import kotlinx.coroutines.runBlocking
 
 class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -56,7 +51,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
 
             @Suppress("DeferredResultUnused")
-            WSConnection.getInstance().authLogoutAsync()
+            runBlocking {
+                Connection.getInstance().authLogout()
+            }
 
             startActivity(
                 Intent(requireContext(), LoginActivity::class.java)
