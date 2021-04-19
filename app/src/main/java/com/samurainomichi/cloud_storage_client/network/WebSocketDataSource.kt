@@ -12,7 +12,7 @@ import java.nio.ByteBuffer
 
 class WebSocketDataSource (
     ip: String,
-): Channel(), DataSource {
+): DataSource {
 
     private val webSocketUrl: String = "ws://${ip}"
 
@@ -29,7 +29,7 @@ class WebSocketDataSource (
                 if (message == null)
                     return
 
-                receiveMessage(message)
+                onMessageReceived.invoke(message)
             }
 
             override fun onMessage(bytes: ByteBuffer?) {
@@ -49,13 +49,10 @@ class WebSocketDataSource (
             }
         }
 
-    init {
-        onSend.observe { client.send(it) }
-    }
-
     override val onConnectionClosed: Observable<Boolean> = Observable()
     override val onConnectionOpened: Observable<Boolean> = Observable()
     override val onBufferReceived: Observable<ByteBuffer> = Observable()
+    override val onMessageReceived: Observable<String> = Observable()
 
     override fun connect() {
         if(!client.connection.isOpen)
@@ -71,49 +68,9 @@ class WebSocketDataSource (
         client.send(byteBuffer)
     }
 
-    override suspend fun tmpAvailableFiles(token: String): List<String> =
-        sendMessageAndGetResult(
-            "availableFiles",
-            Args(token = token, storage = StorageName.tmp)
-        )
-
-    override suspend fun tmpDownloadFiles(token: String, fileList: List<String>) {
-        sendMessageAndGetResult<Boolean>(
-            "download",
-            Args(token = token, storage = StorageName.tmp, fileList = fileList),
-            ignoreResult = true,
-        )
+    override fun sendMessage(message: String) {
+        client.send(message)
     }
 
-    override suspend fun tmpUploadFilesGetToken(fileNames: List<String>): String =
-        sendMessageAndGetResult(
-            "upload",
-            Args(fileList = fileNames, storage = StorageName.tmp)
-        )
 
-    override suspend fun authLogin(username: String, password: String): String =
-        sendMessageAndGetResult(
-            "authUser",
-            Args(user = User(username, password))
-        )
-
-    override suspend fun authRestoreSession(token: String): String =
-        sendMessageAndGetResult(
-            "restoreSession",
-            Args(token = token)
-        )
-
-    override suspend fun authLogout() {
-        sendMessageAndGetResult<Boolean>(
-            "logOut",
-            Args(),
-            ignoreResult = true
-        )
-    }
-
-    override suspend fun pmtAvailableFiles(): Unit =
-        sendMessageAndGetResult(
-            "availableFiles",
-            Args(storage = StorageName.pmt)
-        )
 }

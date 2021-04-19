@@ -19,11 +19,10 @@ import androidx.preference.PreferenceManager
 import com.samurainomichi.cloud_storage_client.MainActivity
 
 import com.samurainomichi.cloud_storage_client.R
-import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import com.samurainomichi.cloud_storage_client.network.WebSocketDataSource
 
 class LoginActivity : AppCompatActivity() {
-
     private lateinit var loginViewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val serverIp = preferences.getString("server_ip", null) ?: "192.168.1.148:7000"
-        val connection = Connection.getInstance(WebSocketDataSource(serverIp))
+        val connection = ConnectionRepository.getInstance(WebSocketDataSource(serverIp))
         connection.connect()
 
         val username = findViewById<EditText>(R.id.username)

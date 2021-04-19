@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
-import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import com.samurainomichi.cloud_storage_client.readFileFromStorage
 import com.samurainomichi.cloud_storage_client.readFileNames
 import com.samurainomichi.cloud_storage_client.saveFileToStorage
@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 
 class TemporaryStorageViewModel : ViewModel() {
-    val connection = Connection.getInstance()
+    val connection = ConnectionRepository.getInstance()
 
     val availableFilesList: MutableLiveData<List<String>> = MutableLiveData(listOf())
 

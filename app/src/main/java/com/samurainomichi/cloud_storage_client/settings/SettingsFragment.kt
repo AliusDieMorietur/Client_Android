@@ -10,7 +10,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.samurainomichi.cloud_storage_client.R
 import com.samurainomichi.cloud_storage_client.login.LoginActivity
-import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import kotlinx.coroutines.runBlocking
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -52,7 +52,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
             @Suppress("DeferredResultUnused")
             runBlocking {
-                Connection.getInstance().authLogout()
+                ConnectionRepository.getInstance().authLogout()
             }
 
             startActivity(

@@ -6,12 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.samurainomichi.cloud_storage_client.R
-import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val connection = Connection.getInstance()
+    private val connection = ConnectionRepository.getInstance()
 
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm

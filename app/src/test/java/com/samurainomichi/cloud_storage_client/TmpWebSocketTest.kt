@@ -1,7 +1,7 @@
 package com.samurainomichi.cloud_storage_client
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.samurainomichi.cloud_storage_client.network.Connection
+import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import com.samurainomichi.cloud_storage_client.network.WebSocketDataSource
 import kotlinx.coroutines.*
 import org.junit.*
@@ -14,7 +14,7 @@ import java.nio.ByteBuffer
 class TmpWebSocketTest {
     companion object {
         private const val ip = "192.168.1.148:7000"
-        private val connection = Connection.getInstance(WebSocketDataSource(ip))
+        private val connection = ConnectionRepository.getInstance(WebSocketDataSource(ip))
         private var token: String = ""
     }
 
