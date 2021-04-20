@@ -32,5 +32,7 @@ data class Args(
 
 data class User(val login: String, val password: String)
 data class Error(val message: String?, val code: String?)
+
 data class CallIdResult(val callId: Int)
-data class MessageResult<T>(val result: T?, val error: Error?)
+data class MessageResult<T>(val result: T?)
+data class ErrorResult(val error: Error?)

@@ -12,8 +12,9 @@ class ChannelTest {
     companion object {
         private val channel = object : Channel() {}
         init {
+            val fakeServer = FakeServer()
             channel.onSend.observe {
-                val answer = FakeServer.getResult(it)
+                val answer = fakeServer.getResult(it)
                 channel.receiveMessage(answer)
             }
         }

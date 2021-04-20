@@ -6,18 +6,17 @@ import com.samurainomichi.cloud_storage_client.util.StorageName
 import java.nio.ByteBuffer
 
 class ConnectionRepository private constructor(private val dataSource: DataSource) : Channel() {
-
     companion object {
-        private lateinit var _instance: ConnectionRepository
+        private lateinit var inst: ConnectionRepository
         fun getInstance(dataSource: DataSource? = null): ConnectionRepository {
-            if (!::_instance.isInitialized) {
+            if (!::inst.isInitialized) {
                 if (dataSource != null)
-                    _instance = ConnectionRepository(dataSource)
+                    inst = ConnectionRepository(dataSource)
                 else
                     throw Exception("Data source must be presented on the first call of getInstance")
             }
 
-            return _instance
+            return inst
         }
     }
 
