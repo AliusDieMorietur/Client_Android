@@ -1,4 +1,4 @@
-package com.samurainomichi.cloud_storage_client
+package com.samurainomichi.cloud_storage_client.unit
 
 import com.samurainomichi.cloud_storage_client.util.Observable
 import org.junit.Assert.assertEquals

@@ -1,4 +1,4 @@
-package com.samurainomichi.cloud_storage_client
+package com.samurainomichi.cloud_storage_client.unit
 import com.samurainomichi.cloud_storage_client.fakes.FakeServer
 import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import kotlinx.coroutines.CompletableDeferred
