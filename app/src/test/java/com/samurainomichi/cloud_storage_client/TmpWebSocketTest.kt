@@ -50,6 +50,7 @@ class TmpWebSocketTest {
 
     @Test
     fun t3_download() = runBlocking {
+        delay(1000)
         val size = CompletableDeferred<Int>()
         connection.onBufferReceived.observe {
             println("got it")
@@ -105,7 +106,7 @@ class TmpWebSocketTest {
             fail("Exception 'No such user' expected")
         }
         catch (e: Exception) {
-            assertEquals("User with login <NoWayItExists> doesn't exist", e.message)
+            assertEquals("User doesn't exist", e.message)
         }
 
     }

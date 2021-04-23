@@ -51,11 +51,11 @@ class FakeServer() {
                     formError(message.callId, Error("Username and/or password is incorrect", "1"))
             }
 
-            "upload" -> {
+            "tmpUpload" -> {
                 answer = formResult(message.callId, "\"buffersToken\"")
             }
 
-            "download" -> {
+            "tmpDownload" -> {
                 answer = formResult(message.callId, "true")
                 sendBuffer = true
             }
