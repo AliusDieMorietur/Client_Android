@@ -27,6 +27,7 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
     init {
         onSend.observe { dataSource.sendMessage(it) }
         dataSource.onMessageReceived.observe { receiveMessage(it) }
+        onConnectionClosed.observe { interruptPending("Connection closed") }
     }
 
     fun sendBuffer(byteBuffer: ByteBuffer) = dataSource.sendBuffer(byteBuffer)
@@ -37,21 +38,21 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
     suspend fun tmpAvailableFiles(token: String): List<String> =
         sendMessageAndGetResult(
             "availableFiles",
-            Args(token = token, storage = StorageName.tmp)
+            Args(token = token)
         )
 
     suspend fun tmpDownloadFiles(token: String, fileList: List<String>) {
         sendMessageAndGetResult<Boolean>(
-            "download",
-            Args(token = token, storage = StorageName.tmp, fileList = fileList),
+            "tmpDownload",
+            Args(token = token, fileList = fileList),
             ignoreResult = true,
         )
     }
 
     suspend fun tmpUploadFilesGetToken(fileNames: List<String>): String =
         sendMessageAndGetResult(
-            "upload",
-            Args(fileList = fileNames, storage = StorageName.tmp)
+            "tmpUpload",
+            Args(fileList = fileNames)
         )
 
     suspend fun authLogin(username: String, password: String): String =

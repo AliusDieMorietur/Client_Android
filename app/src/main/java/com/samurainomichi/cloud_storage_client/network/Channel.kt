@@ -66,9 +66,9 @@ open class Channel {
         return deferred.await()
     }
 
-    fun interruptPending() {
+    fun interruptPending(reason: String = "No reason") {
         idMap.forEach {
-            it.value.invoke("{\"callId\":${it.key}, error: {\"message\":\"Pending interrupted\", \"code\":501}}")
+            it.value.invoke("{\"callId\":${it.key}, error: {\"message\":\"Pending interrupted: $reason\", \"code\":501}}")
         }
     }
 }
