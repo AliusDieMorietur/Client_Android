@@ -5,12 +5,15 @@ import com.samurainomichi.cloud_storage_client.util.Observable
 import com.samurainomichi.cloud_storage_client.util.moshiDefault
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.*
 
 open class Channel {
     val idMap: MutableMap<Int, (message: String) -> Unit> = mutableMapOf()
     var id = 0
     val onSend = Observable<String>()
+
+    private val job = Job()
+    val channelScope = CoroutineScope(job)
 
     fun receiveMessage(message: String) {
         onMessage(message)
@@ -55,6 +58,17 @@ open class Channel {
         if(!waitForResult)
             return true as T
 
+        channelScope.launch {
+            delay(2000)
+            deferred.completeExceptionally(Exception("No answer from server."))
+        }
+
         return deferred.await()
+    }
+
+    fun interruptPending() {
+        idMap.forEach {
+            it.value.invoke("{\"callId\":${it.key}, error: {\"message\":\"Pending interrupted\", \"code\":501}}")
+        }
     }
 }
