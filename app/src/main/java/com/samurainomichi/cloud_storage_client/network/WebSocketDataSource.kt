@@ -1,10 +1,6 @@
 package com.samurainomichi.cloud_storage_client.network
 
-import android.util.Log
 import com.samurainomichi.cloud_storage_client.util.Observable
-import com.samurainomichi.cloud_storage_client.util.StorageName
-import com.samurainomichi.cloud_storage_client.model.Args
-import com.samurainomichi.cloud_storage_client.model.User
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
@@ -19,13 +15,10 @@ class WebSocketDataSource (
     private val client: WebSocketClient =
         object : WebSocketClient(URI(webSocketUrl)) {
             override fun onOpen(handshakedata: ServerHandshake?) {
-                Log.i("WS_CONNECTION", "Connection opened")
                 onConnectionOpened.invoke(true)
             }
 
             override fun onMessage(message: String?) {
-                Log.i("WS_CONNECTION", "Message: $message")
-
                 if (message == null)
                     return
 
@@ -40,12 +33,11 @@ class WebSocketDataSource (
             }
 
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
-                Log.i("WS_CONNECTION", "Connection closed")
                 onConnectionClosed.invoke(true)
             }
 
             override fun onError(ex: Exception?) {
-                Log.i("WS_CONNECTION", "Error: ${ex.toString()}")
+
             }
         }
 
