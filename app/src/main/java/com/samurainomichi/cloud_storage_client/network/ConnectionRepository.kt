@@ -1,6 +1,7 @@
 package com.samurainomichi.cloud_storage_client.network
 
 import com.samurainomichi.cloud_storage_client.model.Args
+import com.samurainomichi.cloud_storage_client.model.Structure
 import com.samurainomichi.cloud_storage_client.model.User
 import com.samurainomichi.cloud_storage_client.util.StorageName
 import java.nio.ByteBuffer
@@ -37,7 +38,7 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
 
     suspend fun tmpAvailableFiles(token: String): List<String> =
         sendMessageAndGetResult(
-            "availableFiles",
+            "tmpAvailableFiles",
             Args(token = token)
         )
 
@@ -49,10 +50,16 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
         )
     }
 
-    suspend fun tmpUploadFilesGetToken(fileNames: List<String>): String =
+    suspend fun tmpUploadFilesStart(fileList: List<String>): String =
         sendMessageAndGetResult(
-            "tmpUpload",
-            Args(fileList = fileNames)
+            "tmpUploadStart",
+            Args(fileList = fileList)
+        )
+
+    suspend fun tmpUploadFilesEnd(fileList: List<String>): String =
+        sendMessageAndGetResult(
+            "tmpUploadEnd",
+            Args(fileList = fileList)
         )
 
     suspend fun authLogin(username: String, password: String): String =
@@ -75,9 +82,49 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
         )
     }
 
-    suspend fun pmtAvailableFiles(): Unit =
+    suspend fun pmtAvailableStructure(): List<Structure> =
         sendMessageAndGetResult(
-            "availableFiles",
-            Args(storage = StorageName.pmt)
+            "availableStructure"
         )
+
+    suspend fun pmtUploadFilesStart(fileList: List<String>) {
+        sendMessageAndGetResult<Boolean>(
+            "pmtUpload",
+            Args(fileList = fileList),
+            ignoreResult = true
+        )
+    }
+
+    suspend fun pmtUploadFilesEnd(fileList: List<String>) {
+        sendMessageAndGetResult<Boolean>(
+            "pmtUpload",
+            Args(fileList = fileList),
+            ignoreResult = true
+        )
+    }
+
+    suspend fun pmtDownloadFiles(fileList: List<String>) {
+        sendMessageAndGetResult<Boolean>(
+            "pmtDownload",
+            Args(fileList = fileList),
+            ignoreResult = true,
+        )
+    }
+
+    suspend fun pmtNewFolder(name: String) {
+        sendMessageAndGetResult<Boolean>(
+            "newFolder",
+            Args(name = name),
+            ignoreResult = true,
+        )
+    }
+
+    suspend fun pmtRenameFile(name: String, newName: String) {
+        sendMessageAndGetResult<Boolean>(
+            "rename",
+            Args(name = name, newName = newName),
+            ignoreResult = true,
+        )
+    }
+
 }
