@@ -1,6 +1,5 @@
 package com.samurainomichi.cloud_storage_client
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.samurainomichi.cloud_storage_client.network.ConnectionRepository
 import com.samurainomichi.cloud_storage_client.network.WebSocketDataSource
 import kotlinx.coroutines.*
@@ -14,23 +13,21 @@ import java.nio.ByteBuffer
 class TmpWebSocketTest {
     companion object {
         private const val ip = "192.168.1.148:7000"
-        private val connection = ConnectionRepository.getInstance(WebSocketDataSource(ip))
+        private val repository = ConnectionRepository.getInstance(WebSocketDataSource(ip))
         private var token: String = ""
+        private var authToken: String = ""
     }
-
-    @Rule
-    @JvmField
-    val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Test
     fun t0_connect() {
-        connection.connectBlocking()
+        repository.connectBlocking()
         println("Connected")
     }
 
     @Test
     fun t1_auth() = runBlocking {
-        val authToken = connection.authLogin("admin", "admin")
+        repository.authCreateUser("testUser", "testPassword")
+        authToken = repository.authLogin("testUser", "testPassword")
         println("Logged in")
         println("Auth token: $authToken")
         assertEquals(32, authToken.length)
@@ -38,10 +35,11 @@ class TmpWebSocketTest {
 
     @Test
     fun t2_upload() = runBlocking {
-        token = connection.tmpUploadFilesGetToken(listOf("File1", "File2"))
+        repository.tmpUploadFilesStart(listOf("File1", "File2"))
         val buffer = ByteBuffer.wrap(ByteArray(30) { i -> (i % 16).toByte() })
-        connection.sendBuffer(buffer.asReadOnlyBuffer())
-        connection.sendBuffer(buffer.asReadOnlyBuffer())
+        repository.sendBuffer(buffer.asReadOnlyBuffer())
+        repository.sendBuffer(buffer.asReadOnlyBuffer())
+        token = repository.tmpUploadFilesEnd(listOf("File1", "File2"))
 
         assertEquals(32, token.length)
         println("Files uploaded")
@@ -50,13 +48,12 @@ class TmpWebSocketTest {
 
     @Test
     fun t3_download() = runBlocking {
-        delay(1000)
         val size = CompletableDeferred<Int>()
-        connection.onBufferReceived.observe {
+        repository.onBufferReceived.observe {
             println("got it")
             size.complete(it.array().size)
         }
-        connection.tmpDownloadFiles(token, listOf("File2"))
+        repository.tmpDownloadFiles(token, listOf("File2"))
 
         assertEquals(30, size.await())
         println("File downloaded")
@@ -64,7 +61,7 @@ class TmpWebSocketTest {
 
     @Test
     fun t4_availableFiles() = runBlocking {
-        val list = connection.tmpAvailableFiles(token)
+        val list = repository.tmpAvailableFiles(token)
         println()
         assertEquals("File1", list[0])
         assertEquals("File2", list[1])
@@ -72,9 +69,8 @@ class TmpWebSocketTest {
 
     @Test
     fun t5_availableFilesWrongToken() = runBlocking {
-        connection.connectBlocking()
         try {
-            connection.tmpAvailableFiles("12345678901234567890123456789012")
+            repository.tmpAvailableFiles("12345678901234567890123456789012")
             fail("Exception 'No such token' expected")
         }
         catch (e: Exception) {
@@ -85,7 +81,7 @@ class TmpWebSocketTest {
     @Test
     fun t6_downloadWrongToken() = runBlocking {
         try {
-            connection.tmpDownloadFiles("Definitely wrong token.", listOf())
+            repository.tmpDownloadFiles("Definitely wrong token.", listOf())
             fail("Exception 'Invalid token' expected")
         }
         catch (e: Exception) {
@@ -95,30 +91,50 @@ class TmpWebSocketTest {
 
     @Test
     fun tl0_logOut() = runBlocking {
-        connection.authLogout()
+        repository.authLogout()
         println("Logged out")
     }
 
     @Test
     fun tl1_authWrongUsername() = runBlocking {
         try {
-            connection.authLogin("NoWayItExists", "123456")
+            repository.authLogin("NoWayItExists", "123456")
             fail("Exception 'No such user' expected")
         }
         catch (e: Exception) {
             assertEquals("User doesn't exist", e.message)
         }
-
     }
 
     @Test
     fun tl2_authWrongPassword() = runBlocking {
         try {
-            connection.authLogin("admin", "123456")
+            repository.authLogin("admin", "123456")
             fail("Exception 'Wrong password' expected")
         }
         catch (e: Exception) {
             assertEquals("Username and/or password is incorrect", e.message)
         }
+    }
+
+    @Test
+    fun tl3_authWithToken() = runBlocking {
+        repository.authRestoreSession(authToken)
+        println("Session restored")
+    }
+
+    @Test
+    fun tl4_deleteUser() = runBlocking {
+        repository.authDeleteUser()
+        println("Logged out")
+
+        try {
+            repository.authRestoreSession(authToken)
+            fail("Session should not be restored")
+        }
+        catch (e: Exception) {
+            assertEquals("Session was not restored", e.message)
+        }
+
     }
 }
