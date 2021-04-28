@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 
 class TemporaryStorageViewModel : ViewModel() {
-    val connection = ConnectionRepository.getInstance()
+    val repository = ConnectionRepository.getInstance()
 
     val availableFilesList: MutableLiveData<List<String>> = MutableLiveData(listOf())
 
@@ -54,7 +54,7 @@ class TemporaryStorageViewModel : ViewModel() {
     fun checkAvailableFiles(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val list: List<String> = connection.tmpAvailableFiles(token)
+                val list: List<String> = repository.tmpAvailableFiles(token)
                 availableFilesList.postValue(list)
             }
             catch (e: Exception) {
@@ -69,7 +69,7 @@ class TemporaryStorageViewModel : ViewModel() {
                 filesToDownload.clear()
                 filesToDownload.addAll(list)
                 downloadIterator = filesToDownload.iterator()
-                connection.tmpDownloadFiles(token, list)
+                repository.tmpDownloadFiles(token, list)
             }
             catch (e: Exception) {
                 Log.e("qwerq", e.message.toString())
@@ -95,12 +95,12 @@ class TemporaryStorageViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val names = readFileNames(filesUriToUpload, context)
-                val token = connection.tmpUploadFilesGetToken(names)
-
+                repository.tmpUploadFilesStart(names)
                 for(uri in filesUriToUpload) {
                     val file = readFileFromStorage(uri, context)
-                    connection.sendBuffer(file)
+                    repository.sendBuffer(file)
                 }
+                val token = repository.tmpUploadFilesEnd(names)
                 _createdToken.postValue(token)
                 _filesUploadResult.postValue(Result.success(filesUriToUpload.size))
 
