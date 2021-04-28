@@ -25,7 +25,7 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun t1_auth() = runBlocking {
+    fun t10_auth() = runBlocking {
         repository.authCreateUser("testUser", "testPassword")
         authToken = repository.authLogin("testUser", "testPassword")
         println("Logged in")
@@ -34,7 +34,7 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun t2_upload() = runBlocking {
+    fun t20_upload() = runBlocking {
         repository.tmpUploadFilesStart(listOf("File1", "File2"))
         val buffer = ByteBuffer.wrap(ByteArray(30) { i -> (i % 16).toByte() })
         repository.sendBuffer(buffer.asReadOnlyBuffer())
@@ -47,7 +47,7 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun t3_download() = runBlocking {
+    fun t30_download() = runBlocking {
         val size = CompletableDeferred<Int>()
         repository.onBufferReceived.observe {
             println("got it")
@@ -60,7 +60,18 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun t4_availableFiles() = runBlocking {
+    fun t31_downloadWrongToken() = runBlocking {
+        try {
+            repository.tmpDownloadFiles("Definitely wrong token.", listOf())
+            fail("Exception 'Invalid token' expected")
+        }
+        catch (e: Exception) {
+            assertEquals("Invalid token", e.message)
+        }
+    }
+
+    @Test
+    fun t40_availableFiles() = runBlocking {
         val list = repository.tmpAvailableFiles(token)
         println()
         assertEquals("File1", list[0])
@@ -68,7 +79,7 @@ class TmpWebSocketTest {
     }
 
     @Test
-    fun t5_availableFilesWrongToken() = runBlocking {
+    fun t41_availableFilesWrongToken() = runBlocking {
         try {
             repository.tmpAvailableFiles("12345678901234567890123456789012")
             fail("Exception 'No such token' expected")
@@ -78,16 +89,6 @@ class TmpWebSocketTest {
         }
     }
 
-    @Test
-    fun t6_downloadWrongToken() = runBlocking {
-        try {
-            repository.tmpDownloadFiles("Definitely wrong token.", listOf())
-            fail("Exception 'Invalid token' expected")
-        }
-        catch (e: Exception) {
-            assertEquals("Invalid token", e.message)
-        }
-    }
 
     @Test
     fun tl0_logOut() = runBlocking {
@@ -126,8 +127,7 @@ class TmpWebSocketTest {
     @Test
     fun tl4_deleteUser() = runBlocking {
         repository.authDeleteUser()
-        println("Logged out")
-
+        println("Deleted user")
         try {
             repository.authRestoreSession(authToken)
             fail("Session should not be restored")
