@@ -53,10 +53,12 @@ class ConnectionRepositoryTest {
     @Test
     fun upload_download() = runBlocking {
         // Upload
-        val token = repository.tmpUploadFilesGetToken(listOf("File1", "File2"))
+        repository.tmpUploadFilesStart(listOf("File1", "File2"))
         val buffer = ByteBuffer.wrap(ByteArray(30) { i -> (i % 16).toByte() })
         repository.sendBuffer(buffer.asReadOnlyBuffer())
         repository.sendBuffer(buffer.asReadOnlyBuffer())
+        val token = repository.tmpUploadFilesEnd(listOf("File1", "File2"))
+
 
         assertEquals("buffersToken", token)
         println("Files uploaded")
