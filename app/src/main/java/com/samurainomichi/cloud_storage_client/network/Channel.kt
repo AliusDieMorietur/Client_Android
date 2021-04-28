@@ -2,10 +2,8 @@ package com.samurainomichi.cloud_storage_client.network
 
 import com.samurainomichi.cloud_storage_client.model.*
 import com.samurainomichi.cloud_storage_client.util.Observable
-import com.samurainomichi.cloud_storage_client.util.moshiDefault
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Types
 import kotlinx.coroutines.*
+import kotlinx.serialization.decodeFromString
 
 open class Channel {
     val idMap: MutableMap<Int, (message: String) -> Unit> = mutableMapOf()
@@ -22,10 +20,16 @@ open class Channel {
     private fun onMessage(message: String) {
         @Suppress("BlockingMethodInNonBlockingContext")
         println(message)
-        moshiDefault.adapter(CallIdResult::class.java).fromJson(message)?.callId?.let {
+
+        nonstrict.decodeFromString<CallIdResult>(message).callId.let {
             idMap[it]?.invoke(message)
             idMap.remove(it)
         }
+
+//        moshiDefault.adapter(CallIdResult::class.java).fromJson(message)?.callId?.let {
+//            idMap[it]?.invoke(message)
+//            idMap.remove(it)
+//        }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -33,20 +37,22 @@ open class Channel {
         action: String, args: Args? = null, ignoreResult: Boolean = false, waitForResult: Boolean = true
     ): T {
         val deferred = CompletableDeferred<T>()
-
-        val type = Types.newParameterizedType(MessageResult::class.java, T::class.java)
-        val adapter: JsonAdapter<MessageResult<T>> = moshiDefault.adapter(type)
+//        val type = Types.newParameterizedType(MessageResult::class.java, T::class.java)
+//        val adapter: JsonAdapter<MessageResult<T>> = moshiDefault.adapter(type)
 
         id++
 
         idMap[id] = { msg ->
-            val er = moshiDefault.adapter(ErrorResult::class.java).fromJson(msg)
+            println(msg)
+//            val er = moshiDefault.adapter(ErrorResult::class.java).fromJson(msg)
+
+            val er: ErrorResult = nonstrict.decodeFromString(msg)
             when {
-                er?.error != null -> deferred.completeExceptionally(Exception(er.error.message))
+                er.error != null -> deferred.completeExceptionally(Exception(er.error.message))
                 ignoreResult -> deferred.complete(true as T)
                 else -> {
-                    val res = adapter.fromJson(msg)
-                    res?.result?.let {
+                    val res: MessageResult<T> = nonstrict.decodeFromString(msg)
+                    res.result?.let {
                         deferred.complete(it)
                     }?: deferred.completeExceptionally(Exception("Unexpected error."))
                 }

@@ -5,53 +5,54 @@ import com.samurainomichi.cloud_storage_client.model.Message
 import com.samurainomichi.cloud_storage_client.model.User
 import com.samurainomichi.cloud_storage_client.network.DataSource
 import com.samurainomichi.cloud_storage_client.util.Observable
-import com.samurainomichi.cloud_storage_client.util.StorageName
-import com.samurainomichi.cloud_storage_client.util.moshiDefault
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.nio.ByteBuffer
 
-class FakeServer() {
-    private val adapter = moshiDefault.adapter(Message::class.java)!!
-
+class FakeServer {
     private fun formResult(callId: Int, res: String) = "{" +
-        "\"callId\": \"$callId\"," +
+        "\"callId\": $callId," +
         "\"result\": $res}"
 
     private fun formError(callId: Int, error: Error? = null) = "{" +
         "\"callId\": \"$callId\"," +
-        "\"error\": ${moshiDefault.adapter(Error::class.java).toJson(error)}}"
+        "\"error\": ${Json.encodeToString(error)}}"
 
     val buffers = mutableListOf<ByteBuffer>()
     var sendBuffer = false
 
     fun getResult(msg: String): String {
-        val message = adapter.fromJson(msg)!!
+        val message: Message = Json.decodeFromString(msg)
 
-        var answer = formError(message.callId, Error("No answer", "0"))
+        var answer = formError(message.callId, Error("No answer", 0))
 
         when (message.msg) {
             "getInt" -> answer = formResult(message.callId, "13")
             "getList" -> answer = formResult(message.callId, "[\"one\", \"two\"]")
-            "getError" -> answer = formError(message.callId, Error("test error", "1"))
+            "getError" -> answer = formError(message.callId, Error("test error", 1))
 
-            "availableFiles" -> {
+            "tmpAvailableFiles" -> {
                 val args = message.args!!
-                if(args.storage!! == StorageName.tmp) {
-                    answer = if(args.token!! == "123321")
-                        formResult(message.callId, "[\"file1\", \"file2\"]")
-                    else
-                        formError(message.callId, Error("No such token", "1"))
-                }
+                answer = if (args.token!! == "123321")
+                    formResult(message.callId, "[\"file1\", \"file2\"]")
+                else
+                    formError(message.callId, Error("No such token", 2))
             }
 
             "authUser" -> {
                 val user = message.args!!.user!!
                 answer = if (user == User("admin", "12345")) {
-                    formResult(message.callId, "789789789")
+                    formResult(message.callId, "\"789789789\"")
                 } else
-                    formError(message.callId, Error("Username and/or password is incorrect", "1"))
+                    formError(message.callId, Error("Username and/or password is incorrect", 3))
             }
 
-            "tmpUpload" -> {
+            "tmpUploadStart" -> {
+                answer = formResult(message.callId, "\"ok\"")
+            }
+
+            "tmpUploadEnd" -> {
                 answer = formResult(message.callId, "\"buffersToken\"")
             }
 
