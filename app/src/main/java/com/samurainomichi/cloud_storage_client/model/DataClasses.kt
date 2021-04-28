@@ -1,13 +1,16 @@
 package com.samurainomichi.cloud_storage_client.model
 
 import com.samurainomichi.cloud_storage_client.util.moshiDefault
+import com.squareup.moshi.FromJson
 import com.squareup.moshi.Json
 
-class Structure(
+data class Structure(
     val name: String,
-    @Json(name = "childs") val children: List<Structure>?,
+    @Json(name = "childs") val children: List<Structure>? = null,
     val capacity: Int
 )
+
+
 
 data class Message(
     val callId: Int,
@@ -25,7 +28,8 @@ data class Args(
     val action: String? = null,
     val changes: List<List<String>>? = null,
     val user: User? = null,
-
+    val name: String? = null,
+    val newName: String? = null,
     ) {
     override fun toString(): String = moshiDefault.adapter(Args::class.java).toJson(this)
 }
