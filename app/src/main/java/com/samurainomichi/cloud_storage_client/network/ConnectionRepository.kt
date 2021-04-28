@@ -3,7 +3,6 @@ package com.samurainomichi.cloud_storage_client.network
 import com.samurainomichi.cloud_storage_client.model.Args
 import com.samurainomichi.cloud_storage_client.model.Structure
 import com.samurainomichi.cloud_storage_client.model.User
-import com.samurainomichi.cloud_storage_client.util.StorageName
 import java.nio.ByteBuffer
 
 class ConnectionRepository private constructor(private val dataSource: DataSource) : Channel() {
@@ -82,14 +81,30 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
         )
     }
 
+    suspend fun authCreateUser(username: String, password: String) {
+        sendMessageAndGetResult<Boolean>(
+            "createUser",
+            Args(user = User(username, password)),
+            ignoreResult = true
+        )
+    }
+
+    suspend fun authDeleteUser() {
+        sendMessageAndGetResult<Boolean>(
+            "deleteUser",
+            Args(),
+            ignoreResult = true
+        )
+    }
+
     suspend fun pmtAvailableStructure(): List<Structure> =
         sendMessageAndGetResult(
-            "availableStructure"
+            "pmtAvailableFiles"
         )
 
     suspend fun pmtUploadFilesStart(fileList: List<String>) {
         sendMessageAndGetResult<Boolean>(
-            "pmtUpload",
+            "pmtUploadStart",
             Args(fileList = fileList),
             ignoreResult = true
         )
@@ -97,7 +112,7 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
 
     suspend fun pmtUploadFilesEnd(fileList: List<String>) {
         sendMessageAndGetResult<Boolean>(
-            "pmtUpload",
+            "pmtUploadEnd",
             Args(fileList = fileList),
             ignoreResult = true
         )
@@ -113,7 +128,7 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
 
     suspend fun pmtNewFolder(name: String) {
         sendMessageAndGetResult<Boolean>(
-            "newFolder",
+            "pmtNewFolder",
             Args(name = name),
             ignoreResult = true,
         )
@@ -121,7 +136,7 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
 
     suspend fun pmtRenameFile(name: String, newName: String) {
         sendMessageAndGetResult<Boolean>(
-            "rename",
+            "pmtRenameFile",
             Args(name = name, newName = newName),
             ignoreResult = true,
         )
