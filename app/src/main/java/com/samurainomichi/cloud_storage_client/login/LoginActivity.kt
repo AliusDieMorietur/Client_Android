@@ -29,18 +29,29 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
         val serverIp = preferences.getString("server_ip", null) ?: "192.168.1.148:7000"
-        val connection = ConnectionRepository.getInstance(WebSocketDataSource(serverIp))
-        connection.connect()
+        val repository = ConnectionRepository.getInstance(WebSocketDataSource(serverIp))
+
+        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
+            .get(LoginViewModel::class.java)
+
+        repository.ldOnConnectionOpened.observe(this) {
+            val authToken = preferences.getString("auth_token", null)
+            authToken?.let {
+                loginViewModel.loginWithToken(it)
+            }
+        }
+
+        repository.connect()
 
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
 
-        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
-            .get(LoginViewModel::class.java)
+
 
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
@@ -105,12 +116,7 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        connection.onConnectionOpened.observe {
-            val authToken = preferences.getString("auth_token", null)
-            authToken?.let {
-                loginViewModel.loginWithToken(it)
-            }
-        }
+
     }
 
     private fun navigateToMainActivity() {
