@@ -19,7 +19,6 @@ data class Message(
     val msg: String,
     val args: Args? = null
 ) {
-//    override fun toString(): String = moshiDefault.adapter(Message::class.java).toJson(this)
     override fun toString(): String = Json.encodeToString(this)
 }
 
@@ -35,7 +34,6 @@ data class Args(
     val name: String? = null,
     val newName: String? = null,
     ) {
-//    override fun toString(): String = moshiDefault.adapter(Args::class.java).toJson(this)
     override fun toString(): String = Json.encodeToString(this)
 }
 
@@ -50,3 +48,5 @@ data class CallIdResult(val callId: Int)
 data class MessageResult<T>(val result: T?)
 @Serializable
 data class ErrorResult(val error: Error? = null)
+@Serializable
+data class StructureMessage(val callId: Int, val structure: List<Structure>)
