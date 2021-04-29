@@ -26,4 +26,5 @@
     <string name="login_failed">"Login failed"</string>
     <string name="session_not_restored">"Session was not restored"</string>
     <string name="logout">Logout</string>
+    <string name="file_icon">File icon</string>
 </resources>
