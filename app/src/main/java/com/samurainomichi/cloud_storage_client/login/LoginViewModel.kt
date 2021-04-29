@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val connection = ConnectionRepository.getInstance()
+    private val repository = ConnectionRepository.getInstance()
 
     private val _loginForm = MutableLiveData<LoginFormState>()
     val loginFormState: LiveData<LoginFormState> = _loginForm
@@ -22,7 +22,7 @@ class LoginViewModel : ViewModel() {
     fun login(username: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val authToken = connection.authLogin(username, password)
+                val authToken = repository.authLogin(username, password)
                 _loginResult.postValue(LoginResult(success = authToken))
             }
 
@@ -35,7 +35,7 @@ class LoginViewModel : ViewModel() {
     fun loginWithToken(token: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val t = connection.authRestoreSession(token)
+                val t = repository.authRestoreSession(token)
                 _loginResult.postValue(LoginResult(success = t))
             }
             catch (e: Exception) {
