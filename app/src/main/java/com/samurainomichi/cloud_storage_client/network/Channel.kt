@@ -25,11 +25,6 @@ open class Channel {
             idMap[it]?.invoke(message)
             idMap.remove(it)
         }
-
-//        moshiDefault.adapter(CallIdResult::class.java).fromJson(message)?.callId?.let {
-//            idMap[it]?.invoke(message)
-//            idMap.remove(it)
-//        }
     }
 
     @Suppress("BlockingMethodInNonBlockingContext")
@@ -37,15 +32,10 @@ open class Channel {
         action: String, args: Args? = null, ignoreResult: Boolean = false, waitForResult: Boolean = true
     ): T {
         val deferred = CompletableDeferred<T>()
-//        val type = Types.newParameterizedType(MessageResult::class.java, T::class.java)
-//        val adapter: JsonAdapter<MessageResult<T>> = moshiDefault.adapter(type)
-
         id++
 
         idMap[id] = { msg ->
             println(msg)
-//            val er = moshiDefault.adapter(ErrorResult::class.java).fromJson(msg)
-
             val er: ErrorResult = nonstrict.decodeFromString(msg)
             when {
                 er.error != null -> deferred.completeExceptionally(Exception(er.error.message))
