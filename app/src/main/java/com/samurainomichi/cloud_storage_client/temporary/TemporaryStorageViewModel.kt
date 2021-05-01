@@ -38,10 +38,16 @@ class TemporaryStorageViewModel : ViewModel() {
         it.mapIndexed {i, item -> "${i+1}. $item"}.joinToString("\n", "Chosen files:\n")
     }
 
-    private var filesUriToUpload = mutableListOf<Uri>()
+    private val _onBufferReceived = MutableLiveData<ByteBuffer>()
+    val onBufferReceived: LiveData<ByteBuffer>
+        get() = _onBufferReceived
 
+    private var filesUriToUpload = mutableListOf<Uri>()
     private val filesToDownload = mutableListOf<String>()
     private var downloadIterator = filesToDownload.iterator()
+    init {
+        repository.onBufferReceived.observe { _onBufferReceived.postValue(it) }
+    }
 
     fun selectTab(index: Int) {
         _isOnPageDownload.value = when(index) {

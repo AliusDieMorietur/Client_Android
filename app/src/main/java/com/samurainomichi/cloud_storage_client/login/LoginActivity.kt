@@ -37,7 +37,7 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
 
-        repository.ldOnConnectionOpened.observe(this) {
+        repository.onConnectionOpened.observe {
             val authToken = preferences.getString("auth_token", null)
             authToken?.let {
                 loginViewModel.loginWithToken(it)

@@ -78,13 +78,11 @@ class TemporaryStorageFragment : Fragment() {
             )
         }
 
-        viewModel.repository.ldOnBufferReceived.observe(viewLifecycleOwner) {
-            it?.let {
-                val path = preferences.getString("download_path", null)
+        viewModel.onBufferReceived.observe(viewLifecycleOwner) {
+            val path = preferences.getString("download_path", null)
 
-                path?.let { p ->
-                    viewModel.onBuffer(it, p, requireContext())
-                }
+            path?.let { p ->
+                viewModel.onBuffer(it, p, requireContext())
             }
         }
 

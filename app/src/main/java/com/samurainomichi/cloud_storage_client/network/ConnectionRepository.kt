@@ -28,25 +28,17 @@ class ConnectionRepository private constructor(private val dataSource: DataSourc
         }
     }
 
-    private val onBufferReceived = dataSource.onBufferReceived
-    private val onConnectionOpened = dataSource.onConnectionOpened
-    private val onConnectionClosed = dataSource.onConnectionClosed
+    val onBufferReceived = dataSource.onBufferReceived
+    val onConnectionOpened = dataSource.onConnectionOpened
+    val onConnectionClosed = dataSource.onConnectionClosed
     val onStructureUpdated = Observable<List<Structure>>()
-
-    val ldOnBufferReceived = MutableLiveData<ByteBuffer>()
-    val ldOnConnectionOpened = MutableLiveData<Boolean>()
-    val ldOnConnectionClosed = MutableLiveData<Boolean>()
 
     init {
         onSend.observe { dataSource.sendMessage(it) }
         dataSource.onMessageReceived.observe { receiveMessage(it) }
         onConnectionClosed.observe {
             interruptPending("Connection closed")
-            ldOnConnectionClosed.value = it
         }
-
-        onConnectionOpened.observe { ldOnConnectionOpened.postValue(it) }
-        onBufferReceived.observe { ldOnBufferReceived.postValue(it) }
 
         idMap[-1] = {
             val msg = Json.decodeFromString<StructureMessage>(it)
