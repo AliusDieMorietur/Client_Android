@@ -36,7 +36,10 @@ android {
         dataBinding true
     }
     testOptions {
-        unitTests.returnDefaultValues = true
+        unitTests.all {
+            exclude '**/PmtWebSocketTest.class'
+            exclude '**/TmpWebSocketTest.class'
+        }
     }
 }
 
