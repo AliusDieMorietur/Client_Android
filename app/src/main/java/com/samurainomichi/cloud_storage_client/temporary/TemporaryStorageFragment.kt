@@ -10,11 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.preference.PreferenceManager
 import com.google.android.material.tabs.TabLayout
 import com.samurainomichi.cloud_storage_client.databinding.TemporaryStorageFragmentBinding
 
@@ -31,7 +29,6 @@ class TemporaryStorageFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(TemporaryStorageViewModel::class.java)
         binding = TemporaryStorageFragmentBinding.inflate(layoutInflater)
         val adapter = TemporaryStorageFilesAdapter()
-        val preferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         binding.viewModel = viewModel
         binding.recyclerViewDownloadTmp.adapter = adapter
@@ -51,27 +48,7 @@ class TemporaryStorageFragment : Fragment() {
             binding.editTokenTmp.clearFocus()
         }
 
-        val openDocumentTree = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-            if(uri == null)
-                return@registerForActivityResult
-
-            requireContext().contentResolver
-                    .takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            val path = uri.toString()
-            with(preferences.edit()) {
-                putString("download_path", path)
-                apply()
-            }
-        }
-
         binding.btnDownloadTmp.setOnClickListener {
-            val path = preferences.getString("download_path", null)
-
-            if(path == null) {
-                openDocumentTree.launch(null)
-                return@setOnClickListener
-            }
-
             viewModel.downloadFiles(
                 binding.editTokenTmp.text.toString(),
                 adapter.list.filter { name -> adapter.checkedCards.contains(name) }
@@ -79,11 +56,7 @@ class TemporaryStorageFragment : Fragment() {
         }
 
         viewModel.onBufferReceived.observe(viewLifecycleOwner) {
-            val path = preferences.getString("download_path", null)
-
-            path?.let { p ->
-                viewModel.onBuffer(it, p, requireContext())
-            }
+            viewModel.onBuffer(it, requireContext())
         }
 
         binding.btnPasteTmp.setOnClickListener {
@@ -119,7 +92,7 @@ class TemporaryStorageFragment : Fragment() {
             if(it.isSuccess)
                 Toast.makeText(requireContext(), "${it.getOrNull()} files downloaded", Toast.LENGTH_SHORT).show()
             else
-                Toast.makeText(requireContext(), "Download failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), it.exceptionOrNull()?.message, Toast.LENGTH_SHORT).show()
         }
 
         viewModel.filesUploadResult.observe(viewLifecycleOwner) {

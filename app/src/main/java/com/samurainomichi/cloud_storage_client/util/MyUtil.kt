@@ -1,1 +1,0 @@
-package com.samurainomichi.cloud_storage_client.util

@@ -72,11 +72,11 @@
                 android:id="@+id/btn_check_tmp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
                 android:text="@string/check_files"
                 app:layout_constraintBottom_toTopOf="@+id/btn_download_tmp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_bias="0.498"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintVertical_weight="1" />
 

@@ -70,15 +70,20 @@ class TemporaryStorageViewModel : ViewModel() {
     }
 
     fun downloadFiles(token: String, list: List<String>) {
+        if(list.isEmpty()) {
+            _filesDownloadResult.postValue(Result.failure(Exception("Files aren't chosen")))
+            return
+        }
+
+        filesToDownload.clear()
+        filesToDownload.addAll(list)
+        downloadIterator = filesToDownload.iterator()
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                filesToDownload.clear()
-                filesToDownload.addAll(list)
-                downloadIterator = filesToDownload.iterator()
+
                 repository.tmpDownloadFiles(token, list)
             }
             catch (e: Exception) {
-                Log.e("qwerq", e.message.toString())
                 _filesDownloadResult.postValue(Result.failure(e))
             }
         }
@@ -118,7 +123,7 @@ class TemporaryStorageViewModel : ViewModel() {
         }
     }
 
-    fun onBuffer(buffer: ByteBuffer, directoryUri: String, context: Context) {
+    fun onBuffer(buffer: ByteBuffer, context: Context) {
         if(!downloadIterator.hasNext()) {
             return
         }
@@ -127,7 +132,8 @@ class TemporaryStorageViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                saveFileToStorage(buffer, name, directoryUri, context)
+                saveFileToStorage(buffer, name, context)
+
                 if(!downloadIterator.hasNext()) {
                     _filesDownloadResult.postValue(Result.success(filesToDownload.size))
                 }
