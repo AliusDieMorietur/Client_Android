@@ -5,6 +5,7 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
 import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 
 class WebSocketDataSource (
     ip: String,
@@ -53,7 +54,7 @@ class WebSocketDataSource (
 
     override fun connectBlocking() {
         if(!client.connection.isOpen)
-            client.connectBlocking()
+            client.connectBlocking(2, TimeUnit.SECONDS)
     }
 
     override fun sendBuffer(byteBuffer: ByteBuffer) {
