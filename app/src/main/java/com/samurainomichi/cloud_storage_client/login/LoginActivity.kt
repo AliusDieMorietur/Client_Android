@@ -31,27 +31,14 @@ class LoginActivity : AppCompatActivity() {
 
 
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-        val serverIp = preferences.getString("server_ip", null) ?: "192.168.1.148:7000"
-        val repository = ConnectionRepository.getInstance(WebSocketDataSource(serverIp))
 
         loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
             .get(LoginViewModel::class.java)
-
-        repository.onConnectionOpened.observe {
-            val authToken = preferences.getString("auth_token", null)
-            authToken?.let {
-                loginViewModel.loginWithToken(it)
-            }
-        }
-
-        repository.connect()
 
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
-
-
 
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer

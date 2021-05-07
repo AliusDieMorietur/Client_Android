@@ -32,17 +32,7 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    fun loginWithToken(token: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val t = repository.authRestoreSession(token)
-                _loginResult.postValue(LoginResult(success = t))
-            }
-            catch (e: Exception) {
-                _loginResult.postValue(LoginResult(error = R.string.session_not_restored))
-            }
-        }
-    }
+
 
     fun loginDataChanged(username: String, password: String) {
         if (!isUserNameValid(username)) {
