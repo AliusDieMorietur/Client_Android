@@ -23,7 +23,7 @@ fun saveFileToStorage(buffer: ByteBuffer, fullName: String, context: Context) {
         saveFileQ(buffer, filename, mimeType, context)
     }
     else
-        saveFileLegacy(buffer, filename, mimeType, context)
+        saveFileLegacy(buffer, filename, mimeType)
 }
 
 @TargetApi(29)
@@ -48,7 +48,8 @@ fun saveFileQ(buffer: ByteBuffer, name: String, mimeType: String, context: Conte
     } ?: throw RuntimeException("MediaStore failed for some reason")
 }
 
-fun saveFileLegacy(buffer: ByteBuffer, name: String, mimeType: String, context: Context) {
+@Suppress("DEPRECATION")
+fun saveFileLegacy(buffer: ByteBuffer, name: String, mimeType: String) {
     val file = File(
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
         "$name.$mimeType"
