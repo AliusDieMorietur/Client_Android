@@ -1,5 +1,6 @@
 package com.samurainomichi.cloud_storage_client.util
 
+// hello lab 5
 class Observable<T>() {
     constructor(observable: Observable<T>) : this() {
         observable.observe(::invoke)
