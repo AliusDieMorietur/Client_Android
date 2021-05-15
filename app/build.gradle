@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-kapt'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.4.30'
+    id 'com.adarshr.test-logger' version '3.0.0'
 }
 
 android {
@@ -39,6 +40,14 @@ android {
         unitTests.all {
             exclude '**/PmtWebSocketTest.class'
             exclude '**/TmpWebSocketTest.class'
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+            }
+
+            testlogger {
+                showStandardStreams false
+                showPassedStandardStreams false
+            }
         }
     }
 }
