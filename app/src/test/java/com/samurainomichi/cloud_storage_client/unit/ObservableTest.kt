@@ -12,8 +12,8 @@ class ObservableTest {
         obs.observe {
             a = it
         }
-        obs.invoke(13)
-        assertEquals(13, a)
+        obs.invoke(12)
+        assertEquals(12, a)
     }
 
     @Test
