@@ -12,7 +12,7 @@ class ObservableTest {
         obs.observe {
             a = it
         }
-        obs.invoke(13)
+        obs.invoke(10)
         assertEquals(13, a)
     }
 
