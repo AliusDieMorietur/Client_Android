@@ -1,4 +1,4 @@
-name: Unit-Tests
+name: Test_Assemble_Release
 
 on:
   pull_request:
